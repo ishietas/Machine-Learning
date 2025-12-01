@@ -1,0 +1,98 @@
+# IMPORTS
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+
+# -----------------------------
+# a. Load dataset and retrieve required rows & columns
+# -----------------------------
+penguins = sns.load_dataset("penguins")
+
+# Filter only Adelie and Chinstrap species
+penguins = penguins[penguins['species'].isin(['Adelie', 'Chinstrap'])]
+
+# Select required columns
+penguins = penguins[['species', 'bill_length_mm', 'bill_depth_mm',
+                     'flipper_length_mm', 'body_mass_g']]
+
+# Drop missing values
+penguins = penguins.dropna()
+
+# Convert species (target) → numeric
+penguins['species'] = penguins['species'].map({'Adelie': 0, 'Chinstrap': 1})
+
+# Define features and target
+X = penguins[['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g']]
+y = penguins['species']
+
+
+# -----------------------------
+# b. Plot histograms for each feature
+# -----------------------------
+X.hist(figsize=(10, 6))
+plt.suptitle("Feature Distributions")
+plt.show()
+
+
+# -----------------------------
+# c. Show correlation of these features with species
+# -----------------------------
+correlation = penguins.corr()
+plt.figure(figsize=(7, 5))
+sns.heatmap(correlation, annot=True, cmap="coolwarm")
+plt.title("Correlation Heatmap")
+plt.show()
+
+
+# -----------------------------
+# d. Normalization/Standardization
+# -----------------------------
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+
+# -----------------------------
+# e. Split dataset into train/test (70:30)
+# -----------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.30, random_state=42
+)
+
+
+# -----------------------------
+# f. Train Logistic Regression Model
+# -----------------------------
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred = model.predict(X_test)
+
+
+# -----------------------------
+# g. Plot Confusion Matrix
+# -----------------------------
+cm = confusion_matrix(y_test, y_pred)
+
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=['Adelie', 'Chinstrap'],
+            yticklabels=['Adelie', 'Chinstrap'])
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
+
+
+# -----------------------------
+# h. Display metrics
+# -----------------------------
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+print("F1 Score:", f1_score(y_test, y_pred))
